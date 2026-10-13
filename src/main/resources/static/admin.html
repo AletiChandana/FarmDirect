@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmDirect Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f3f7f1;
+            color: #243324;
+        }
+        header {
+            background: #245c36;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+        .card h2 {
+            color: #245c36;
+            margin-bottom: 8px;
+        }
+        button {
+            background: #245c36;
+            color: white;
+            border: 0;
+            padding: 11px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .message {
+            margin-top: 20px;
+            color: #8a2d2d;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div>
+        <h1>FarmDirect Admin</h1>
+        <p>Manage your Farmer-to-Consumer platform</p>
+    </div>
+    <button onclick="logout()">Logout</button>
+</header>
+
+
+
+<main>
+    <h2>Admin Dashboard</h2>
+    <p>Welcome, Administrator!</p>
+
+    <div class="cards">
+        <section class="card">
+            <h2>Users</h2>
+            <p>Total registered users</p>
+            <h3 id="userCount">Loading...</h3>
+        </section>
+
+        <section class="card">
+            <h2>Products</h2>
+            <p>Total listed products</p>
+            <h3 id="productCount">Loading...</h3>
+        </section>
+
+        <section class="card">
+            <h2>Orders</h2>
+            <p>Total customer orders</p>
+            <h3 id="orderCount">Loading...</h3>
+        </section>
+    </div>
+
+    <h2>Manage Users</h2>
+    <button onclick="loadUsers()">Refresh Users</button>
+
+    <div style="overflow-x: auto; margin-top: 15px;">
+        <table style="width:100%; border-collapse:collapse; background:white;">
+            <thead>
+            <tr style="background:#245c36; color:white;">
+                <th style="padding:12px;">ID</th>
+                <th style="padding:12px;">Name</th>
+                <th style="padding:12px;">Email</th>
+                <th style="padding:12px;">Role</th>
+            </tr>
+            </thead>
+            <tbody id="usersTable">
+            <tr><td colspan="4" style="padding:12px;">Loading users...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Manage Products</h2>
+    <button onclick="loadProducts()">Refresh Products</button>
+
+    <div style="overflow-x:auto; margin-top:15px;">
+        <table style="width:100%; border-collapse:collapse; background:white;">
+            <thead>
+            <tr style="background:#245c36; color:white;">
+                <th style="padding:12px;">ID</th>
+                <th style="padding:12px;">Product</th>
+                <th style="padding:12px;">Description</th>
+                <th style="padding:12px;">Price (₹)</th>
+                <th style="padding:12px;">Stock</th>
+            </tr>
+            </thead>
+            <tbody id="productsTable">
+            <tr>
+                <td colspan="5" style="padding:12px;">
+                    Loading products...
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p id="message" class="message"></p>
+</main>
+
+
+
+
+<script>
+    function logout() {
+        window.location.href = "/logout";
+    }
+
+    async function loadDashboard() {
+        try {
+            const response = await fetch("/api/admin/dashboard");
+
+            if (!response.ok) {
+                throw new Error("Could not load dashboard.");
+            }
+
+            const data = await response.json();
+            document.getElementById("userCount").textContent = data.users;
+            document.getElementById("productCount").textContent = data.products;
+            document.getElementById("orderCount").textContent = data.orders;
+        } catch (error) {
+            document.getElementById("message").textContent =
+                "Unable to load dashboard statistics.";
+        }
+    }
+
+    async function loadUsers() {
+        const table = document.getElementById("usersTable");
+
+        try {
+            const response = await fetch("/api/admin/users");
+
+            if (!response.ok) {
+                throw new Error("Could not load users.");
+            }
+
+            const users = await response.json();
+            table.replaceChildren();
+
+            if (users.length === 0) {
+                const row = table.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 4;
+                cell.textContent = "No users found.";
+                return;
+            }
+
+            users.forEach(user => {
+                const row = table.insertRow();
+
+                [user.id, user.name, user.email, user.role]
+                    .forEach(value => {
+                        const cell = row.insertCell();
+                        cell.style.padding = "12px";
+                        cell.style.borderBottom = "1px solid #ddd";
+                        cell.textContent = value;
+                    });
+            });
+        } catch (error) {
+            table.replaceChildren();
+            const row = table.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 4;
+            cell.textContent =
+                "Unable to load users. Check admin login and server.";
+        }
+    }
+
+    async function loadProducts() {
+        const table = document.getElementById("productsTable");
+
+        try {
+            const response = await fetch("/api/admin/products");
+
+            if (!response.ok) {
+                throw new Error("Could not load products.");
+            }
+
+            const products = await response.json();
+            table.replaceChildren();
+
+            if (products.length === 0) {
+                const row = table.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 5;
+                cell.textContent = "No products found.";
+                return;
+            }
+
+            products.forEach(product => {
+                const row = table.insertRow();
+
+                const values = [
+                    product.id,
+                    (product.emoji ? product.emoji + " " : "") + product.name,
+                    product.description,
+                    Number(product.price).toFixed(2),
+                    product.stock
+                ];
+
+                values.forEach(value => {
+                    const cell = row.insertCell();
+                    cell.style.padding = "12px";
+                    cell.style.borderBottom = "1px solid #ddd";
+                    cell.textContent = value ?? "";
+                });
+            });
+        } catch (error) {
+            table.replaceChildren();
+
+            const row = table.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 5;
+            cell.textContent =
+                "Unable to load products. Check admin login and server.";
+        }
+    }
+
+    loadDashboard();
+    loadUsers();
+    loadProducts();
+</script>
+
+
+
+</body>
+</html>

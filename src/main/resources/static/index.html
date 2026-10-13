@@ -1,0 +1,569 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmDirect - Farmer to Consumer Market</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f9f2;
+            color: #263526;
+        }
+
+        header {
+            background: #247a38;
+            color: white;
+            text-align: center;
+            padding: 22px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav {
+            background: #185c2a;
+            text-align: center;
+            padding: 14px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: bold;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 45px 15px;
+            background: #e0f0d9;
+        }
+
+        .hero h2 {
+            color: #247a38;
+            font-size: 32px;
+        }
+
+        .hero p {
+            font-size: 18px;
+        }
+
+        .products {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 22px;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .product, .cart, .checkout {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 3px 10px #00000015;
+        }
+
+        .emoji {
+            font-size: 55px;
+        }
+
+        .price {
+            color: #247a38;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        button {
+            background: #247a38;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 4px;
+        }
+
+        button:hover {
+            background: #185c2a;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cart, .checkout {
+            max-width: 750px;
+            margin: 25px auto;
+            text-align: center;
+        }
+
+        .cart-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+            padding: 12px 0;
+            text-align: left;
+        }
+
+        .cart-row button {
+            padding: 7px 12px;
+        }
+
+        .checkout {
+            text-align: left;
+        }
+
+        .checkout h2, .checkout .form-actions {
+            text-align: center;
+        }
+
+        .checkout label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .checkout input, .checkout textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            font: inherit;
+        }
+
+        #message, #checkoutMessage {
+            color: #247a38;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #b42318 !important;
+        }
+
+        footer {
+            background: #185c2a;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🌿 FarmDirect</h1>
+    <p>Connecting Farmers Directly with Consumers</p>
+</header>
+
+
+<nav>
+    <a href="#home">Home</a>
+    <a href="#products">Products</a>
+    <a href="farmer.html">Farmer Dashboard</a>
+    <a href="#cart">My Cart</a>
+    <a href="#contact">Contact</a>
+    <a href="login.html">Login</a>
+    <a href="register.html">Register</a>
+</nav>
+
+<section class="hero" id="home">
+    <h2>Fresh From Farmers to Your Home</h2>
+    <p>Buy fresh fruits and vegetables directly from local farmers.</p>
+    <a href="#products">
+        <button type="button">Shop Now</button>
+    </a>
+</section>
+
+<section class="products" id="products">
+    <h2>Our Fresh Products</h2>
+    <p id="loading">Loading fresh products from farmers...</p>
+    <div class="product-list" id="productList"></div>
+</section>
+
+<section class="cart" id="cart">
+    <h2>🛒 Your Cart</h2>
+    <p>Different products: <span id="count">0</span></p>
+
+    <div id="cartItems">Your cart is empty.</div>
+
+    <h3>Total: ₹<span id="cartTotal">0.00</span></h3>
+
+    <button type="button" id="checkoutButton" disabled>
+        Proceed to Checkout
+    </button>
+
+    <p id="message" aria-live="polite"></p>
+</section>
+
+<section class="checkout" id="checkout" hidden>
+    <h2>📦 Customer Checkout</h2>
+    <p>Enter your details to place your order.</p>
+
+    <form id="checkoutForm">
+        <label for="customerName">Full Name</label>
+        <input
+                id="customerName"
+                name="customerName"
+                type="text"
+                maxlength="100"
+                required
+        >
+
+        <label for="phone">Phone Number</label>
+        <input
+                id="phone"
+                name="phone"
+                type="tel"
+                inputmode="numeric"
+                pattern="[0-9]{10}"
+                maxlength="10"
+                placeholder="Enter 10-digit phone number"
+                required
+        >
+
+        <label for="deliveryAddress">Delivery Address</label>
+        <textarea
+                id="deliveryAddress"
+                name="deliveryAddress"
+                rows="3"
+                maxlength="500"
+                required
+        ></textarea>
+
+        <div class="form-actions">
+            <button type="submit" id="placeOrderButton">
+                Place Order
+            </button>
+            <button type="button" id="cancelCheckoutButton">
+                Cancel
+            </button>
+        </div>
+    </form>
+
+    <p id="checkoutMessage" aria-live="polite"></p>
+</section>
+
+<footer id="contact">
+    <p>© 2026 FarmDirect | Supporting Local Farmers</p>
+    <p>Fresh produce, fair prices, happy farmers!</p>
+</footer>
+
+<script>
+    let products = [];
+    let cart = {};
+
+    const productList = document.getElementById("productList");
+    const loading = document.getElementById("loading");
+    const cartItems = document.getElementById("cartItems");
+    const cartCount = document.getElementById("count");
+    const cartTotal = document.getElementById("cartTotal");
+    const message = document.getElementById("message");
+    const checkout = document.getElementById("checkout");
+    const checkoutForm = document.getElementById("checkoutForm");
+    const checkoutMessage = document.getElementById("checkoutMessage");
+    const checkoutButton = document.getElementById("checkoutButton");
+    const placeOrderButton = document.getElementById("placeOrderButton");
+
+    function showMessage(element, text, isError = false) {
+        element.textContent = text;
+        element.classList.toggle("error", isError);
+    }
+
+    async function loadProducts() {
+        loading.textContent = "Loading products...";
+        productList.replaceChildren();
+
+        try {
+            const response = await fetch("/api/products", {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("Unable to load products.");
+            }
+
+            products = await response.json();
+            loading.textContent = "";
+
+            if (!Array.isArray(products) || products.length === 0) {
+                loading.textContent = "No products are available yet.";
+                return;
+            }
+
+            products.forEach(function(product) {
+                const card = document.createElement("div");
+                card.className = "product";
+
+                const emoji = document.createElement("div");
+                emoji.className = "emoji";
+                emoji.textContent = product.emoji || "🌿";
+
+                const name = document.createElement("h3");
+                name.textContent = product.name;
+
+                const description = document.createElement("p");
+                description.textContent = product.description || "";
+
+                const price = document.createElement("p");
+                price.className = "price";
+                price.textContent =
+                    "₹" + Number(product.price).toFixed(2) + " / kg";
+
+                const stockText = document.createElement("p");
+                const availableStock = Number(product.stock ?? 0);
+
+                stockText.textContent = availableStock > 0
+                    ? "Available Stock: " + availableStock + " kg"
+                    : "Out of Stock";
+
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = "Add to Cart";
+                button.disabled = availableStock <= 0;
+
+                if (availableStock <= 0) {
+                    button.textContent = "Out of Stock";
+                }
+
+                button.addEventListener("click", function() {
+                    addToCart(product);
+                });
+
+                card.append(emoji, name, description, price, stockText, button);
+                productList.appendChild(card);
+            });
+
+        } catch (error) {
+            loading.textContent =
+                "Unable to load products. Check that Spring Boot is running.";
+            console.error(error);
+        }
+    }
+
+    function addToCart(product) {
+        if (product.id == null || !Number.isFinite(Number(product.price))) {
+            showMessage(message, "This product has invalid information.", true);
+            return;
+        }
+
+        const id = String(product.id);
+
+        if (!cart[id]) {
+            cart[id] = {
+                product: product,
+                quantity: 0
+            };
+        }
+
+        cart[id].quantity++;
+
+        renderCart();
+        showMessage(message, product.name + " added to your cart!");
+    }
+
+    function renderCart() {
+        cartItems.replaceChildren();
+
+        const entries = Object.values(cart);
+        const totalQuantity = entries.reduce(
+            (sum, entry) => sum + entry.quantity, 0
+        );
+
+        const total = entries.reduce(
+            (sum, entry) =>
+                sum + Number(entry.product.price) * entry.quantity,
+            0
+        );
+
+        cartCount.textContent = totalQuantity;
+        cartTotal.textContent = total.toFixed(2);
+        checkoutButton.disabled = entries.length === 0;
+
+        if (entries.length === 0) {
+            cartItems.textContent = "Your cart is empty.";
+            checkout.hidden = true;
+            return;
+        }
+
+        entries.forEach(function(entry) {
+            const row = document.createElement("div");
+            row.className = "cart-row";
+
+            const details = document.createElement("span");
+            details.textContent =
+                entry.product.name + " — ₹" +
+                (Number(entry.product.price) * entry.quantity).toFixed(2) +
+                " (" + entry.quantity + " kg)";
+
+            const controls = document.createElement("div");
+
+            const minus = document.createElement("button");
+            minus.type = "button";
+            minus.textContent = "−";
+            minus.setAttribute(
+                "aria-label", "Remove one " + entry.product.name
+            );
+            minus.addEventListener("click", function() {
+                changeQuantity(entry.product.id, -1);
+            });
+
+            const plus = document.createElement("button");
+            plus.type = "button";
+            plus.textContent = "+";
+            plus.setAttribute(
+                "aria-label", "Add one " + entry.product.name
+            );
+            plus.addEventListener("click", function() {
+                changeQuantity(entry.product.id, 1);
+            });
+
+            controls.append(minus, plus);
+            row.append(details, controls);
+            cartItems.appendChild(row);
+        });
+    }
+
+    function changeQuantity(productId, change) {
+        const id = String(productId);
+
+        if (!cart[id]) {
+            return;
+        }
+
+        cart[id].quantity += change;
+
+        if (cart[id].quantity <= 0) {
+            delete cart[id];
+        }
+
+        renderCart();
+        showMessage(message, "Cart updated.");
+    }
+
+    checkoutButton.addEventListener("click", function() {
+        if (Object.keys(cart).length === 0) {
+            showMessage(message, "Please add products first.", true);
+            return;
+        }
+
+        checkout.hidden = false;
+        showMessage(checkoutMessage, "");
+        checkout.scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("cancelCheckoutButton")
+        .addEventListener("click", function() {
+            checkout.hidden = true;
+        });
+
+    checkoutForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        if (Object.keys(cart).length === 0) {
+            showMessage(checkoutMessage, "Your cart is empty.", true);
+            return;
+        }
+
+        const items = Object.values(cart).map(function(entry) {
+            return {
+                productId: Number(entry.product.id),
+                quantity: entry.quantity
+            };
+        });
+
+        const order = {
+            customerName: document.getElementById("customerName").value.trim(),
+            phone: document.getElementById("phone").value.trim(),
+            deliveryAddress:
+                document.getElementById("deliveryAddress").value.trim(),
+            items: items
+        };
+
+        if (!order.customerName ||
+            !order.phone ||
+            !order.deliveryAddress) {
+            showMessage(
+                checkoutMessage,
+                "Please fill in all the required fields.",
+                true
+            );
+            return;
+        }
+
+        placeOrderButton.disabled = true;
+        showMessage(checkoutMessage, "Placing your order...");
+
+        try {
+            const response = await fetch("/api/orders", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(order)
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || "Order failed. Please try again."
+                );
+            }
+
+
+            const confirmation =
+                "Order placed successfully! Order ID: " +
+                (result.orderId ?? "Not provided") +
+                ". Total: ₹" +
+                (Number.isFinite(Number(result.totalAmount))
+                    ? Number(result.totalAmount).toFixed(2)
+                    : "Unavailable") +
+                ". Status: " + (result.status ?? "Pending") + ".";
+
+
+            cart = {};
+            renderCart();
+            checkoutForm.reset();
+            checkout.hidden = true;
+            showMessage(message, confirmation);
+            showMessage(checkoutMessage, "");
+
+            document.getElementById("cart").scrollIntoView({
+                behavior: "smooth"
+            });
+
+        } catch (error) {
+            showMessage(checkoutMessage, error.message, true);
+        } finally {
+            placeOrderButton.disabled = false;
+        }
+    });
+
+    loadProducts();
+</script>
+
+</body>
+</html>

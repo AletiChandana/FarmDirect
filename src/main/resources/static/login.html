@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmDirect - Login</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f7ef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 320px;
+            box-shadow: 0 4px 15px #0002;
+        }
+
+        h2 {
+            text-align: center;
+            color: #26733b;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+        }
+
+        input, button {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 11px;
+            margin-top: 6px;
+        }
+
+        button {
+            background: #26733b;
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #message {
+            overflow-wrap: anywhere;
+            color: #b42318;
+        }
+    </style>
+</head>
+
+<body>
+<div class="card">
+    <h2>🌱 FarmDirect</h2>
+    <h3>Login</h3>
+
+    <form method="post" action="/login">
+        <label for="email">Email</label>
+        <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                autocomplete="username">
+
+        <label for="password">Password</label>
+        <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                autocomplete="current-password">
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p id="message" role="status"></p>
+
+    <p>
+        New to FarmDirect?
+        <a href="/register.html">Create an account</a>
+    </p>
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const message = document.getElementById("message");
+
+    if (params.has("error")) {
+        message.textContent =
+            "Login failed. Please check your email and password.";
+    } else if (params.has("logout")) {
+        message.style.color = "#26733b";
+        message.textContent = "You have logged out successfully.";
+    }
+</script>
+</body>
+</html>

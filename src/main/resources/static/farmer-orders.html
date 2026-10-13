@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmDirect - Farmer Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f7f0;
+            margin: 0;
+            color: #26382a;
+        }
+
+        header {
+            background: #176333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .order-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000012;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+        }
+
+        .status {
+            color: #8a5b00;
+            font-weight: bold;
+        }
+
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .items th, .items td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+
+        .items th {
+            background: #edf5ed;
+        }
+
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .message {
+            text-align: center;
+            padding: 25px;
+        }
+
+        .back {
+            color: white;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            main { padding: 10px; }
+            .items th, .items td {
+                padding: 7px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🌾 FarmDirect</h1>
+    <h2>Farmer Orders Dashboard</h2>
+    <a class="back" href="/farmer.html">← Back to Farmer Dashboard</a>
+</header>
+
+<main>
+    <h2>Customer Orders</h2>
+    <div id="orders">
+        <p class="message">Loading orders...</p>
+    </div>
+</main>
+
+<script>
+    async function loadOrders() {
+        const container = document.getElementById("orders");
+        container.textContent = "Loading orders...";
+
+        try {
+            const response = await fetch("/api/farmer/orders");
+
+            if (response.status === 401 || response.status === 403) {
+                container.textContent =
+                    "Please log in with your farmer account to view orders.";
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error("Could not load orders.");
+            }
+
+            const orders = await response.json();
+            container.replaceChildren();
+
+            if (!orders.length) {
+                container.textContent = "No customer orders yet.";
+                return;
+            }
+
+            orders.sort((a, b) => b.orderId - a.orderId);
+
+            orders.forEach(order => {
+                const card = document.createElement("section");
+                card.className = "order-card";
+
+                const heading = document.createElement("div");
+                heading.className = "order-header";
+
+                const title = document.createElement("h3");
+                title.textContent = "Order #" + order.orderId;
+
+                const status = document.createElement("span");
+                status.className = "status";
+                status.textContent = order.status;
+
+                heading.append(title, status);
+                card.append(heading);
+
+                const customer = document.createElement("p");
+                customer.textContent = "Customer: " + order.customerName;
+
+                const phone = document.createElement("p");
+                phone.textContent = "Phone: " + order.phone;
+
+                const address = document.createElement("p");
+                address.textContent = "Delivery address: " +
+                    order.deliveryAddress;
+
+                const date = document.createElement("p");
+                date.textContent = "Order date: " +
+                    (order.createdAt || "Not available");
+
+                card.append(customer, phone, address, date);
+
+                const table = document.createElement("table");
+                table.className = "items";
+
+                const thead = document.createElement("thead");
+                const headerRow = document.createElement("tr");
+
+                ["Product", "Quantity (kg)", "Price/kg", "Subtotal"]
+                    .forEach(label => {
+                        const th = document.createElement("th");
+                        th.textContent = label;
+                        headerRow.append(th);
+                    });
+
+                thead.append(headerRow);
+                table.append(thead);
+
+                const tbody = document.createElement("tbody");
+
+                order.items.forEach(item => {
+                    const row = document.createElement("tr");
+
+                    [
+                        item.productName,
+                        item.quantity,
+                        "₹" + Number(item.unitPrice).toFixed(2),
+                        "₹" + Number(item.subtotal).toFixed(2)
+                    ].forEach(value => {
+                        const td = document.createElement("td");
+                        td.textContent = value;
+                        row.append(td);
+                    });
+
+                    tbody.append(row);
+                });
+
+                table.append(tbody);
+                card.append(table);
+
+                const total = document.createElement("p");
+                total.className = "total";
+                total.textContent = "Order Total: ₹" +
+                    Number(order.totalAmount).toFixed(2);
+
+                card.append(total);
+                container.append(card);
+            });
+
+        } catch (error) {
+            container.textContent =
+                "Unable to load orders. Please refresh the page.";
+        }
+    }
+
+    loadOrders();
+</script>
+
+</body>
+</html>

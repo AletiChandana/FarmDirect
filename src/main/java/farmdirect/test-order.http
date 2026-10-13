@@ -1,0 +1,14 @@
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerName": "Test Customer",
+  "phone": "9876543210",
+  "deliveryAddress": "Test delivery address",
+  "items": [
+    {
+      "productId": 1,
+      "quantity": 2
+    }
+  ]
+}

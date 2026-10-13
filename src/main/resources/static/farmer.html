@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmDirect - Farmer Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f8f0;
+            margin: 0;
+            color: #263526;
+        }
+
+        header {
+            background: #247a38;
+            color: white;
+            text-align: center;
+            padding: 22px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #00000015;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 11px;
+            margin-top: 6px;
+            border: 1px solid #bbb;
+            border-radius: 5px;
+            font: inherit;
+        }
+
+        button {
+            padding: 11px 16px;
+            border: none;
+            border-radius: 5px;
+            background: #247a38;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .form-buttons button {
+            flex: 1;
+        }
+
+        .cancel-btn {
+            background: #68756a;
+        }
+
+        .delete-btn {
+            background: #c0392b;
+        }
+
+        .edit-btn {
+            background: #2469a0;
+        }
+
+        #message {
+            padding: 10px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+        }
+
+        .product-card {
+            border: 1px solid #dce7d8;
+            border-radius: 10px;
+            padding: 18px;
+            background: #fff;
+        }
+
+        .product-emoji {
+            font-size: 42px;
+        }
+
+        .product-card h3 {
+            margin: 10px 0;
+        }
+
+        .product-card p {
+            overflow-wrap: anywhere;
+        }
+
+        .product-price {
+            color: #247a38;
+            font-size: 19px;
+            font-weight: bold;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .product-actions button {
+            flex: 1;
+            padding: 10px 5px;
+        }
+
+        a {
+            color: #247a38;
+        }
+
+        .muted {
+            color: #667266;
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 12px;
+                margin: 15px auto;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>🌿 FarmDirect</h1>
+    <h2>Farmer Dashboard</h2>
+    <p>Add and manage your farm products</p>
+</header>
+
+<main>
+    <section class="panel">
+        <h2 id="formTitle">Add a Product</h2>
+
+        <form id="productForm">
+            <label for="name">Product Name</label>
+            <input id="name" required maxlength="100"
+                   placeholder="Example: Fresh Mangoes">
+
+            <label for="description">Description</label>
+            <textarea id="description" required maxlength="500"
+                      placeholder="Describe your product"></textarea>
+
+            <label for="price">Price per kg (₹)</label>
+            <input id="price" type="number" required min="0.01"
+                   max="1000000" step="0.01" placeholder="Example: 80">
+            <label for="stock">Available Stock (kg)</label>
+            <input id="stock" type="number" required
+                   min="0" max="1000000" step="1"
+                   placeholder="Example: 50">
+
+            <label for="emoji">Product Emoji</label>
+            <input id="emoji" maxlength="20" placeholder="Example: 🥭">
+
+            <div class="form-buttons">
+                <button type="submit" id="saveButton">Save Product</button>
+                <button type="button" id="cancelButton"
+                        class="cancel-btn" hidden>Cancel Edit</button>
+            </div>
+        </form>
+
+        <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+        <h2>My Products</h2>
+        <p class="muted">View, edit, or delete products saved in your database.</p>
+        <button type="button" id="refreshButton">Refresh Products</button>
+        <p id="listMessage" role="status" aria-live="polite"></p>
+        <div id="productList" class="product-grid"></div>
+    </section>
+
+
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0;">
+        <a href="/"
+           style="background: #68756a; color: white; padding: 12px 18px;
+              border-radius: 6px; text-decoration: none;">
+            ← Back to Home
+        </a>
+
+        <a href="/farmer-orders.html"
+           style="background: #176333; color: white; padding: 12px 18px;
+              border-radius: 6px; text-decoration: none; font-weight: bold;">
+            📋 View Customer Orders
+        </a>
+    </div>
+
+</main>
+
+<script>
+    const form = document.getElementById("productForm");
+    const message = document.getElementById("message");
+    const listMessage = document.getElementById("listMessage");
+    const productList = document.getElementById("productList");
+    const formTitle = document.getElementById("formTitle");
+    const saveButton = document.getElementById("saveButton");
+    const cancelButton = document.getElementById("cancelButton");
+
+    let editingId = null;
+    let products = [];
+
+    function showMessage(text, isError = false) {
+        message.textContent = text;
+        message.style.color = isError ? "#b42318" : "#247a38";
+    }
+
+    async function loadProducts() {
+        listMessage.textContent = "Loading products...";
+        productList.replaceChildren();
+
+        try {
+            const response = await fetch("/api/products");
+
+            if (!response.ok) {
+                throw new Error("Could not load products");
+            }
+
+            products = await response.json();
+            renderProducts();
+
+            listMessage.textContent = products.length === 0
+                ? "No products found. Add your first product above."
+                : "Total products: " + products.length;
+        } catch (error) {
+            listMessage.textContent =
+                "Could not load products. Check whether the backend is running.";
+            console.error(error);
+        }
+    }
+
+    function renderProducts() {
+        productList.replaceChildren();
+
+        products.forEach(product => {
+            const card = document.createElement("article");
+            card.className = "product-card";
+
+            const emoji = document.createElement("div");
+            emoji.className = "product-emoji";
+            emoji.textContent = product.emoji || "🌿";
+
+            const title = document.createElement("h3");
+            title.textContent = product.name;
+
+            const description = document.createElement("p");
+            description.textContent = product.description;
+
+            const price = document.createElement("p");
+            price.className = "product-price";
+            price.textContent =
+                "₹" + Number(product.price).toFixed(2) + " / kg";
+            const stockText = document.createElement("p");
+            stockText.textContent = "Available Stock: " + (product.stock ?? 0) + " kg";
+
+            const idText = document.createElement("p");
+            idText.className = "muted";
+            idText.textContent = "Product ID: " + product.id;
+
+            const actions = document.createElement("div");
+            actions.className = "product-actions";
+
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "edit-btn";
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", () => editProduct(product));
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "delete-btn";
+            deleteButton.textContent = "Delete";
+            deleteButton.addEventListener("click", () => deleteProduct(product));
+
+            actions.append(editButton, deleteButton);
+            card.append(emoji, title, description, price, stockText, idText, actions);
+            productList.appendChild(card);
+        });
+    }
+
+    function editProduct(product) {
+        editingId = product.id;
+
+        document.getElementById("name").value = product.name || "";
+        document.getElementById("description").value =
+            product.description || "";
+        document.getElementById("price").value = product.price;
+        document.getElementById("stock").value = product.stock ?? 0;
+        document.getElementById("emoji").value = product.emoji || "";
+
+        formTitle.textContent = "Edit Product";
+        saveButton.textContent = "Update Product";
+        cancelButton.hidden = false;
+        showMessage("Editing: " + product.name);
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.getElementById("name").focus();
+    }
+
+    function resetForm() {
+        form.reset();
+        editingId = null;
+        formTitle.textContent = "Add a Product";
+        saveButton.textContent = "Save Product";
+        cancelButton.hidden = true;
+    }
+
+    cancelButton.addEventListener("click", () => {
+        resetForm();
+        showMessage("Edit cancelled.");
+    });
+
+    form.addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const product = {
+            name: document.getElementById("name").value.trim(),
+            description: document.getElementById("description").value.trim(),
+            price: Number(document.getElementById("price").value),
+            stock: Number(document.getElementById("stock").value),
+            emoji: document.getElementById("emoji").value.trim() || "🌿"
+        };
+
+        if (!product.name || !product.description ||
+            !Number.isFinite(product.price) ||
+            product.price <= 0 || product.price > 1000000) {
+            showMessage("Please enter valid product details.", true);
+            return;
+        }
+
+        const isEditing = editingId !== null;
+        const url = isEditing
+            ? "/api/products/" + editingId
+            : "/api/products";
+        const method = isEditing ? "PUT" : "POST";
+
+        saveButton.disabled = true;
+        saveButton.textContent = isEditing ? "Updating..." : "Saving...";
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(product)
+            });
+
+            if (!response.ok) {
+                throw new Error("Server returned status " + response.status);
+            }
+
+            showMessage(isEditing
+                ? "Product updated successfully!"
+                : "Product saved successfully!");
+
+            resetForm();
+            await loadProducts();
+        } catch (error) {
+            showMessage(
+                "Could not save the product. Please check the backend.",
+                true
+            );
+            console.error(error);
+        } finally {
+            saveButton.disabled = false;
+            saveButton.textContent =
+                editingId !== null ? "Update Product" : "Save Product";
+        }
+    });
+
+    async function deleteProduct(product) {
+        const confirmed = window.confirm(
+            'Delete "' + product.name + '"? This action cannot be undone.'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        listMessage.textContent = "Deleting product...";
+
+        try {
+            const response = await fetch(
+                "/api/products/" + product.id,
+                { method: "DELETE" }
+            );
+
+            if (!response.ok) {
+                if (response.status === 409 || response.status === 500) {
+                    throw new Error(
+                        "The product may be linked to existing orders. " +
+                        "Keep it in the database to preserve order history."
+                    );
+                }
+
+                if (response.status === 404) {
+                    throw new Error("Product not found. Refresh the list.");
+                }
+
+                throw new Error("Server returned status " + response.status);
+            }
+
+            if (editingId === product.id) {
+                resetForm();
+                showMessage("The edited product was deleted.");
+            }
+
+            listMessage.textContent = "Product deleted successfully.";
+            await loadProducts();
+        } catch (error) {
+            listMessage.textContent = error.message ||
+                "Could not delete the product.";
+            console.error(error);
+        }
+    }
+
+    document.getElementById("refreshButton")
+        .addEventListener("click", loadProducts);
+
+    loadProducts();
+</script>
+</body>
+</html>
